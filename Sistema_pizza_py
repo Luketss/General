@@ -1,0 +1,145 @@
+pizza
+### Importações ###
+from tkinter import *
+import sqlite3
+
+### Globais ###
+conn = sqlite3.connect("pizza.db")
+cursor = conn.cursor()
+
+def criarTabela():
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pedido (
+            codPedido INTEGER NOT NULL PRIMARY KEY,
+            nome TEXT NOT NULL,
+            adicionais TEXT NOT NULL
+        );
+    """)
+
+criarTabela()
+
+#### Definições da Aplicação Principal ###
+principal = Tk()
+principal.title("Sistems - Principal")
+principal.geometry("800x555")
+principal.resizable(FALSE, FALSE)
+
+#### Funções ###
+def adicionar_pedido():
+    codPedido = etPedido.get()
+    nome = etNome.get()
+    adicionais = etAdicionais.get()
+    cursor.execute("""
+        INSERT INTO pizza (codPedido, nome, adicionais) VALUES (?, ?, ?)""", (codPedido, nome, adicionais))
+    conn.commit()
+    lstpizza.insert(END, (codPedido, nome, adicionais))
+
+def deletar_pedido():
+    codPedido_pizza = etPedidoDeletar.get()
+    cursor.execute("""
+        DELETE FROM pizza WHERE codPedido=?""", (codPedido_pizza,))
+    conn.commit()
+    lstpizza.delete(0, END)
+    lista = cursor.execute("""
+        SELECT * FROM pizza;
+        """)
+    for i in lista:
+        lstpizza.insert(END, i)
+
+def mudar_adicionais():
+    codPedido_pizza = etPedidoMudar.get()
+    nova_adicionais = etNovaadicionais.get()
+    cursor.execute("""
+        UPDATE pizza SET adicionais = ? WHERE codPedido = ?""", (nova_adicionais, codPedido_pizza))
+    conn.commit()
+    lstpizza.delete(0, END)
+    lista = cursor.execute("""
+        SELECT * FROM pizza;
+        """)
+    for i in lista:
+        lstpizza.insert(END, i)
+
+def exportar():
+    with io.open('pizza.sql', 'w') as f:
+        for linha in conn.iterdump():
+            f.write('%s\n' % linha)
+    cursor.execute("""
+        SELECT * FROM pizza;
+    """)
+    with io.open('pizza.txt', 'w') as f:
+        for linha in cursor.fetchall():
+            linha = str(linha)
+            f.write('%s\n' % linha)
+
+### Widgets - Principal ###
+lblTitulo = Label(principal, text="Alumn")
+lblNomeadicionais = Label(principal, text="Matrícula / Nome / adicionais")
+
+### Widgets - Adicionar pizza ###
+lblAdicionarpizza = Label(principal, text="Adicionar pizza")
+lblcodPedido = Label(principal, text="Código pedido: ")
+lblNome = Label(principal, text="Nome do pizza: ")
+lbladicionais = Label(principal, text="adicionais da pizza: ")
+etPedido = Entry(principal)
+etNome = Entry(principal)
+etAdicionais = Entry(principal)
+btnAdd = Button(principal, text="Adicionar", command=adicionar_pedido)
+
+### Widgets - Deletar pizza ###
+lblDeletarpizza = Label(principal, text="Deletar pizza")
+lblcodPedidoDeletar = Label(principal, text="Código: ")
+etPedidoDeletar = Entry(principal, width=10)
+btnDel = Button(principal, text="Deletar", command=deletar_pedido)
+
+### Widgets - Mudar adicionais ###
+lblMudaradicionais = Label(principal, text="Mudar adicionais")
+lblcodPedidoMudar = Label(principal, text="Código: ")
+lblNovaadicionais = Label(principal, text="adicionais adicionais: ")
+etPedidoMudar = Entry(principal)
+etNovaadicionais = Entry(principal)
+btnMudaradicionais = Button(principal, text="Mudar adicionais", command=mudar_adicionais)
+
+### Widgets - Listar pizza ###
+scrollbar = Scrollbar(principal)
+lstpizza = Listbox(principal, width=35, height=16)
+lstpizza.config(yscrollcommand=scrollbar.set)
+scrollbar.config(command=lstpizza.yview)
+lista = cursor.execute("""
+    SELECT * FROM pizza;
+    """)
+for i in lista:
+    lstpizza.insert(END, i)
+
+### Posicionamento de Widgets - Principal ###
+lblTitulo.place(x=275)
+lblNomeadicionais.place(x=308, y=30)
+
+### Posicionamento de Widgets - Listar pizza ####
+lstpizzas.place(x=310, y=52)
+scrollbar.place()
+
+### Posicionamento de Widgets - Adicionar pizza ###
+lblAdicionarpizza.place(x=100, y=30)
+lblcodPedido.place(x=10, y=52)
+etPedido.place(x=115, y=50)
+lblNome.place(x=10, y=82)
+etNome.place(x=115, y=80)
+lbladicionais.place(x=10, y=112)
+etAdicionais.place(x=115, y=110)
+btnAdd.place(x=115, y=145)
+
+### Posicionamento de Widgets - Deletar pizza ###
+lblDeletarpizza.place(x=100, y=175)
+lblcodPedidoDeletar.place(x=10, y=197)
+etPedidoDeletar.place(x=80, y=195)
+btnDel.place(x=175, y=198)
+
+### Posicionamento de Widgets - Mudar adicionais ###
+lblMudaradicionais.place(x=105, y=225)
+lblcodPedidoMudar.place(x=10, y=247)
+etPedidoMudar.place(x=115, y=245)
+lblNovaadicionais.place(x=10, y=277)
+etNovaadicionais.place(x=115, y=275)
+btnMudaradicionais.place(x=115, y=308)
+
+principal.mainloop()
